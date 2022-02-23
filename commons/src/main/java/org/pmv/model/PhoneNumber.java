@@ -15,7 +15,6 @@ import com.google.common.base.Objects;
  */
 public class PhoneNumber implements Formattable, Comparable<PhoneNumber> {
 
-	// primitive types: it means box and unbox, performance problem
 	private static final Comparator<PhoneNumber> COMPARATOR = Comparator.
 			comparingInt((PhoneNumber p) -> p.areaCode).
 			thenComparing(p -> p.number);	
@@ -34,15 +33,13 @@ public class PhoneNumber implements Formattable, Comparable<PhoneNumber> {
 	}
 
 	/**
-	 * TODO Z: enumerar ventajas del factory method
+	 * Factory method
 	 * 
 	 * @param areaCode
 	 * @param number
 	 * @return
 	 */
 	public static PhoneNumber of(int areaCode, String number, String owner) {
-		// checkArgument(areaCode >= 100);
-		// checkArgument(number >= 0);
 		if (areaCode > 900) {
 			return new InternationalPhoneNumber(areaCode, number, owner);
 		}
@@ -77,20 +74,9 @@ public class PhoneNumber implements Formattable, Comparable<PhoneNumber> {
 				.add("owner",owner).toString();
 	}
 
-	/**
-	 * Look into Formattable interface
-	 */
 	@Override
 	public void formatTo(Formatter formatter, int flags, int width, int precision) {
 		formatter.format("%d-%d", areaCode, number);
-	}
-
-	/**
-	 * 
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		System.out.println(PhoneNumber.of(200, "2000", "Antonio"));
 	}
 
 	public int getAreaCode() {
