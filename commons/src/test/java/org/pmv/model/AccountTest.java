@@ -1,12 +1,16 @@
 package org.pmv.model;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.condition.*;
 import org.pmv.model.exceptions.InsufficientBalanceException;
 
 import java.math.BigDecimal;
 import java.text.MessageFormat;
+import java.util.Map;
+import java.util.Properties;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assumptions.*;
 
 
 //@TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -157,4 +161,72 @@ class AccountTest {
                           .anyMatch(a -> a.getPerson().equals("Eric Cartman")))
         );
     }
+
+    @Test
+    @EnabledOnOs(OS.WINDOWS)
+    void only_windows_test() {
+        assertTrue(true);
+    }
+
+    @Test
+    @EnabledOnOs({OS.LINUX,OS.MAC})
+    void not_windows_test() {assertTrue(true);}
+
+    @Test
+    @DisabledOnOs(OS.WINDOWS)
+    void not_in_windows_test() {}
+
+    @Test
+    @EnabledOnJre(JRE.JAVA_8)
+    void only_in_jdk_8_test() {}
+
+    @Test
+    @EnabledOnJre(JRE.JAVA_17)
+    void only_in_jdk_17_test() {}
+
+    @Test
+    void print_system_properties() {
+        Properties properties = System.getProperties();
+        properties.forEach((k,v) -> System.out.println(k + " : " + v + "\n"));
+    }
+
+    @Test
+    @EnabledIfSystemProperty(named = "user.language", matches = "es")
+    void saludo_test() {
+        String saludo = "Hola";
+        assertEquals("Hola", saludo);
+    }
+
+    @Test
+    void print_environment_variables() {
+        Map<String, String> env = System.getenv();
+        env.forEach((k,v) -> System.out.println(k + " : " + v));
+    }
+
+    @Test
+    @EnabledIfEnvironmentVariable(named="USERNAME", matches="caizo")
+    void if_user_is_caizo() {
+        String caizo = "caizo";
+        assertEquals("caizo",caizo);
+    }
+
+    @Test
+    void account_balance_dev_test() {
+        boolean isDev = "dev".equals(System.getProperty("ENV"));
+        assumeTrue(isDev);
+        assertEquals(5000.00, ericAccount.getBalance().doubleValue());
+        assertFalse(ericAccount.getBalance().compareTo(BigDecimal.ZERO) < 0);
+        assertTrue(ericAccount.getBalance().compareTo(BigDecimal.ZERO) > 0);
+    }
+
+    @Test
+    void account_balance_dev_test_2() {
+        boolean isDev = "dev".equals(System.getProperty("ENV"));
+        assumingThat(isDev,() -> {
+            assertEquals(5000.00, ericAccount.getBalance().doubleValue());
+            assertFalse(ericAccount.getBalance().compareTo(BigDecimal.ZERO) < 0);
+            assertTrue(ericAccount.getBalance().compareTo(BigDecimal.ZERO) > 0);
+        });
+    }
+
 }
