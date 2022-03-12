@@ -2,6 +2,8 @@ package org.pmv.model;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.condition.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.pmv.model.exceptions.InsufficientBalanceException;
 
 import java.math.BigDecimal;
@@ -162,53 +164,67 @@ class AccountTest {
         );
     }
 
-    @Test
-    @EnabledOnOs(OS.WINDOWS)
-    void only_windows_test() {
-        assertTrue(true);
+
+    @Nested
+    class OperatingSystemTest{
+        @Test
+        @EnabledOnOs(OS.WINDOWS)
+        void only_windows_test() {
+            assertTrue(true);
+        }
+
+        @Test
+        @EnabledOnOs({OS.LINUX,OS.MAC})
+        void not_windows_test() {assertTrue(true);}
+
+        @Test
+        @DisabledOnOs(OS.WINDOWS)
+        void not_in_windows_test() {}
     }
 
-    @Test
-    @EnabledOnOs({OS.LINUX,OS.MAC})
-    void not_windows_test() {assertTrue(true);}
+    @Nested
+    class JavaVersionTest{
+        @Test
+        @EnabledOnJre(JRE.JAVA_8)
+        void only_in_jdk_8_test() {}
 
-    @Test
-    @DisabledOnOs(OS.WINDOWS)
-    void not_in_windows_test() {}
-
-    @Test
-    @EnabledOnJre(JRE.JAVA_8)
-    void only_in_jdk_8_test() {}
-
-    @Test
-    @EnabledOnJre(JRE.JAVA_17)
-    void only_in_jdk_17_test() {}
-
-    @Test
-    void print_system_properties() {
-        Properties properties = System.getProperties();
-        properties.forEach((k,v) -> System.out.println(k + " : " + v + "\n"));
+        @Test
+        @EnabledOnJre(JRE.JAVA_17)
+        void only_in_jdk_17_test() {}
     }
 
-    @Test
-    @EnabledIfSystemProperty(named = "user.language", matches = "es")
-    void saludo_test() {
-        String saludo = "Hola";
-        assertEquals("Hola", saludo);
+    @Nested
+    class SystemPropertiesTest{
+        @Test
+        void print_system_properties() {
+            Properties properties = System.getProperties();
+            properties.forEach((k,v) -> System.out.println(k + " : " + v + "\n"));
+        }
+
+        @Test
+        @EnabledIfSystemProperty(named = "user.language", matches = "es")
+        void saludo_test() {
+            String saludo = "Hola";
+            assertEquals("Hola", saludo);
+        }
     }
 
-    @Test
-    void print_environment_variables() {
-        Map<String, String> env = System.getenv();
-        env.forEach((k,v) -> System.out.println(k + " : " + v));
+    class EnvironmentVariablesTest{
+        @Test
+        void print_environment_variables_test() {
+            Map<String, String> env = System.getenv();
+            env.forEach((k,v) -> System.out.println(k + " : " + v));
+        }
+
+        @Test
+        @EnabledIfEnvironmentVariable(named="USERNAME", matches="caizo")
+        void if_user_is_caizo_test() {
+            String caizo = "caizo";
+            assertEquals("caizo",caizo);
+        }
     }
 
-    @Test
-    @EnabledIfEnvironmentVariable(named="USERNAME", matches="caizo")
-    void if_user_is_caizo() {
-        String caizo = "caizo";
-        assertEquals("caizo",caizo);
-    }
+
 
     @Test
     void account_balance_dev_test() {
@@ -219,14 +235,23 @@ class AccountTest {
         assertTrue(ericAccount.getBalance().compareTo(BigDecimal.ZERO) > 0);
     }
 
-    @Test
-    void account_balance_dev_test_2() {
+    @RepeatedTest(value=3,name ="Repetition number {currentRepetition} of {totalRepetitions}")
+    void account_balance_dev_test_2(RepetitionInfo info) {
         boolean isDev = "dev".equals(System.getProperty("ENV"));
         assumingThat(isDev,() -> {
             assertEquals(5000.00, ericAccount.getBalance().doubleValue());
             assertFalse(ericAccount.getBalance().compareTo(BigDecimal.ZERO) < 0);
             assertTrue(ericAccount.getBalance().compareTo(BigDecimal.ZERO) > 0);
         });
+        if(info.getCurrentRepetition() == 2){
+            System.out.println("This is repetition number 2");
+        }
     }
 
+    @ParameterizedTest()
+    @ValueSource(strings = {"100","200"})
+    void account_debit_greater_than_zero_test(String amount) {
+        stanAccount.debit(new BigDecimal(amount));
+        assertTrue(stanAccount.getBalance().compareTo(BigDecimal.ZERO) > 0);
+    }
 }
