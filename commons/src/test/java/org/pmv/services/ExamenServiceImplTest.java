@@ -1,12 +1,12 @@
 package org.pmv.services;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.pmv.data.Data;
 import org.pmv.model.Examen;
 import org.pmv.repository.ExamenRepository;
-import org.pmv.repository.ExamenRepositoryImpl;
+import org.pmv.repository.PreguntasRepository;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -16,15 +16,20 @@ import static org.mockito.Mockito.*;
 
 class ExamenServiceImplTest {
 
-    @Test
-    void findExamenByName() {
-        ExamenRepository examenRepository = mock(ExamenRepository.class);
-        ExamenService examenService = new ExamenServiceImpl(examenRepository);
+    ExamenRepository examenRepository;
+    ExamenService examenService;
+    PreguntasRepository preguntasRepository;
 
-        List<Examen> data = Arrays.asList(new Examen(1L, "Mates"),
-                new Examen(2L, "Lengua"),
-                new Examen(3L, "Historia"));
-        when(examenRepository.findAll()).thenReturn(data);
+    @BeforeEach
+    void setUp() {
+        examenRepository = mock(ExamenRepository.class);
+        preguntasRepository = mock(PreguntasRepository.class);
+        examenService = new ExamenServiceImpl(examenRepository, preguntasRepository);
+    }
+
+    @Test
+    void find_examen_by_name() {
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
 
         Optional<Examen> examen = examenService.findExamenByName("Mates");
         assertTrue(examen.isPresent());
@@ -33,15 +38,20 @@ class ExamenServiceImplTest {
 
     @Test
     void find_examen_by_name_empty_list() {
-        ExamenRepository examenRepository = mock(ExamenRepository.class);
-        ExamenService examenService = new ExamenServiceImpl(examenRepository);
-
         List<Examen> data = Collections.emptyList();
         when(examenRepository.findAll()).thenReturn(data);
 
         Optional<Examen> examen = examenService.findExamenByName("Mates");
-        assertTrue(!examen.isPresent());
-
+        assertFalse(examen.isPresent());
     }
 
+
+    @Test
+    void find_examen_con_preguntas_test() {
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
+        when(preguntasRepository.getPreguntas(1L)).thenReturn(Data.PREGUNTAS_MATES);
+
+        Examen examenMates = examenService.findExamenConPreguntas("Mates");
+        assertEquals(5, examenMates.getPreguntas().size());
+    }
 }
