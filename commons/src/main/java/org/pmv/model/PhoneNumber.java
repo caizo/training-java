@@ -1,11 +1,13 @@
 package org.pmv.model;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 import java.util.Comparator;
 import java.util.Formattable;
 import java.util.Formatter;
 
-import com.google.common.base.MoreObjects;
-import com.google.common.base.Objects;
+
 
 /**
  * Minimize mutability
@@ -24,7 +26,6 @@ public class PhoneNumber implements Formattable, Comparable<PhoneNumber> {
 	private final int hash;
 	private final String owner;
 
-	// private for immutability
 	public PhoneNumber(int areaCode, String number, String owner) {
 		this.areaCode = areaCode;
 		this.number = number;
@@ -56,7 +57,6 @@ public class PhoneNumber implements Formattable, Comparable<PhoneNumber> {
 //			return Objects.equal(this.areaCode, other.areaCode) && 
 //					Objects.equal(this.number, other.number);
 			return this.areaCode == other.areaCode && this.number == other.number;
-
 		}
 		return false;
 	}
