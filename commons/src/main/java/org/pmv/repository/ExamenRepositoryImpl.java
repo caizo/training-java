@@ -11,7 +11,7 @@ public class ExamenRepositoryImpl implements ExamenRepository{
     @Override
     public List<Examen> findAll() {
         try {
-            TimeUnit.SECONDS.sleep(5);
+            TimeUnit.SECONDS.sleep(100);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

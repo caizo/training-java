@@ -1,7 +1,13 @@
 package org.pmv.services;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.pmv.data.Data;
 import org.pmv.model.Examen;
 import org.pmv.repository.ExamenRepository;
@@ -14,17 +20,15 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ExamenServiceImplTest {
-
-    ExamenRepository examenRepository;
-    ExamenService examenService;
-    PreguntasRepository preguntasRepository;
+    @Mock ExamenRepository examenRepository;
+    @Mock PreguntasRepository preguntasRepository;
+    @InjectMocks ExamenServiceImpl examenService;
 
     @BeforeEach
     void setUp() {
-        examenRepository = mock(ExamenRepository.class);
-        preguntasRepository = mock(PreguntasRepository.class);
-        examenService = new ExamenServiceImpl(examenRepository, preguntasRepository);
+        //MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -53,5 +57,19 @@ class ExamenServiceImplTest {
 
         Examen examenMates = examenService.findExamenConPreguntas("Mates");
         assertEquals(5, examenMates.getPreguntas().size());
+        verify(examenRepository).findAll();
+        verify(preguntasRepository).getPreguntas(1L);
+    }
+
+    @DisplayName("Este test tiene que fallar")
+    @Test
+    void find_no_examen_verify_test() {
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
+        when(preguntasRepository.getPreguntas(1L)).thenReturn(Data.PREGUNTAS_MATES);
+
+        Examen examen = examenService.findExamenConPreguntas("Tecnología");
+        assertNull(examen);
+        verify(examenRepository).findAll();
+        verify(preguntasRepository).getPreguntas(anyLong());
     }
 }
