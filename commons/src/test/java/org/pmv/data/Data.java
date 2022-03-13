@@ -12,4 +12,6 @@ public class Data {
 
     public static final List<String> PREGUNTAS_MATES =
             Arrays.asList("Sumas","Restas","Divisiones", "Multiplicaciones", "Fracciones");
+
+    public static final Examen EXAMEN = new Examen(null,"Física");
 }

@@ -17,4 +17,9 @@ public class ExamenRepositoryImpl implements ExamenRepository{
         }
         return null;
     }
+
+    @Override
+    public Examen saveExamen(Examen examen) {
+        return null;
+    }
 }

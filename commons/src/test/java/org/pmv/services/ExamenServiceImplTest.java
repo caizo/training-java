@@ -6,8 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.Answer;
 import org.pmv.data.Data;
 import org.pmv.model.Examen;
 import org.pmv.repository.ExamenRepository;
@@ -33,29 +34,36 @@ class ExamenServiceImplTest {
 
     @Test
     void find_examen_by_name() {
+        // Given
         when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
-
+        // When
         Optional<Examen> examen = examenService.findExamenByName("Mates");
+
+        // Then
         assertTrue(examen.isPresent());
         assertEquals(1L, examen.orElseThrow().getId());
     }
 
     @Test
     void find_examen_by_name_empty_list() {
+        // Given
         List<Examen> data = Collections.emptyList();
         when(examenRepository.findAll()).thenReturn(data);
-
+        // When
         Optional<Examen> examen = examenService.findExamenByName("Mates");
+        // Then
         assertFalse(examen.isPresent());
     }
 
 
     @Test
     void find_examen_con_preguntas_test() {
+        // Given
         when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
         when(preguntasRepository.getPreguntas(1L)).thenReturn(Data.PREGUNTAS_MATES);
-
+        // When
         Examen examenMates = examenService.findExamenConPreguntas("Mates");
+        // Then
         assertEquals(5, examenMates.getPreguntas().size());
         verify(examenRepository).findAll();
         verify(preguntasRepository).getPreguntas(1L);
@@ -64,12 +72,44 @@ class ExamenServiceImplTest {
     @DisplayName("Este test tiene que fallar")
     @Test
     void find_no_examen_verify_test() {
+        // Given
         when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
         when(preguntasRepository.getPreguntas(1L)).thenReturn(Data.PREGUNTAS_MATES);
-
+        // When
         Examen examen = examenService.findExamenConPreguntas("Tecnología");
+        // Then
         assertNull(examen);
         verify(examenRepository).findAll();
         verify(preguntasRepository).getPreguntas(anyLong());
+    }
+
+
+    @Test
+    void save_examen_test() {
+        /* Dados los siguientes datos. Precondiciones */
+        Examen newExamen = Data.EXAMEN;
+        newExamen.setPreguntas(Data.PREGUNTAS_MATES);
+
+        when(examenRepository.saveExamen(any(Examen.class))).then(new Answer<Examen>(){
+            Long examenId = 4L;
+            @Override
+            public Examen answer(InvocationOnMock invocation) throws Throwable {
+                Examen examen = invocation.getArgument(0);
+                examen.setId(examenId++);
+                return examen;
+            }
+        });
+
+        /* When: Cuando se ejecute el siguiente método*/
+        Examen examen = examenService.saveExamen(newExamen);
+
+
+        /* Entonces hacemos las validaciones*/
+        assertNotNull(examen);
+        assertEquals(4L,examen.getId());
+
+        verify(examenRepository).saveExamen(any(Examen.class));
+        verify(preguntasRepository).savePreguntas(anyList());
+
     }
 }
