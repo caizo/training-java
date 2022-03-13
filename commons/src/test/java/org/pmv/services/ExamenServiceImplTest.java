@@ -8,10 +8,12 @@ import org.mockito.*;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
-import org.pmv.data.Data;
+import org.pmv.Data;
 import org.pmv.model.Examen;
 import org.pmv.repository.ExamenRepository;
+import org.pmv.repository.ExamenRepositoryImpl;
 import org.pmv.repository.PreguntasRepository;
+import org.pmv.repository.PreguntasRepositoryImpl;
 
 import java.util.Collections;
 import java.util.List;
@@ -22,8 +24,10 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class ExamenServiceImplTest {
-    @Mock ExamenRepository examenRepository;
-    @Mock PreguntasRepository preguntasRepository;
+    @Mock
+    ExamenRepositoryImpl examenRepository;
+    @Mock
+    PreguntasRepositoryImpl preguntasRepository;
     @InjectMocks ExamenServiceImpl examenService;
     @Captor ArgumentCaptor<Long> captor;
 
@@ -220,6 +224,19 @@ class ExamenServiceImplTest {
 
     }
 
+
+    @Test
+    void do_call_real_method_test() {
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
+        //when(preguntasRepository.getPreguntas(anyLong())).thenReturn(Data.PREGUNTAS);
+        doCallRealMethod().when(preguntasRepository).getPreguntas(anyLong());
+
+        Examen examen = examenService.findExamenConPreguntas("Mates");
+
+        assertEquals(1L, examen.getId());
+        assertEquals("Mates", examen.getNombre());
+
+    }
 
     static class MyArgsMatchers implements ArgumentMatcher<Long>{
 

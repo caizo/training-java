@@ -1,4 +1,4 @@
-package org.pmv.data;
+package org.pmv;
 
 import org.pmv.model.Examen;
 
@@ -19,4 +19,5 @@ public class Data {
             Arrays.asList("Sumas","Restas","Divisiones", "Multiplicaciones", "Fracciones");
 
     public static final Examen EXAMEN_ID_NULL = new Examen(null,"Física");
+    public static final Examen EXAMEN = new Examen(100L,"Química");
 }
