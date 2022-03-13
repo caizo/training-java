@@ -277,6 +277,20 @@ class ExamenServiceImplTest {
 
     }
 
+
+    @Test
+    void invocations_number_test() {
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
+
+        Examen examen = examenService.findExamenConPreguntas("Mates");
+
+        verify(preguntasRepository,times(1)).getPreguntas(1L);
+        verify(preguntasRepository,atLeast(1)).getPreguntas(1L);
+        verify(preguntasRepository,atLeastOnce()).getPreguntas(1L);
+        verify(preguntasRepository,atMost(11)).getPreguntas(1L);
+        verify(preguntasRepository,atMostOnce()).getPreguntas(1L);
+    }
+
     static class MyArgsMatchers implements ArgumentMatcher<Long>{
 
         @Override
