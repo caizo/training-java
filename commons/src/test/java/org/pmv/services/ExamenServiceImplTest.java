@@ -4,8 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
+import org.mockito.*;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.Answer;
@@ -26,6 +25,7 @@ class ExamenServiceImplTest {
     @Mock ExamenRepository examenRepository;
     @Mock PreguntasRepository preguntasRepository;
     @InjectMocks ExamenServiceImpl examenService;
+    @Captor ArgumentCaptor<Long> captor;
 
     @BeforeEach
     void setUp() {
@@ -87,7 +87,7 @@ class ExamenServiceImplTest {
     @Test
     void save_examen_test() {
         /* Dados los siguientes datos. Precondiciones */
-        Examen newExamen = Data.EXAMEN;
+        Examen newExamen = Data.EXAMEN_ID_NULL;
         newExamen.setPreguntas(Data.PREGUNTAS);
 
         when(examenRepository.saveExamen(any(Examen.class))).then(new Answer<Examen>(){
@@ -136,5 +136,101 @@ class ExamenServiceImplTest {
         verify(examenRepository).findAll();
         verify(preguntasRepository).getPreguntas(argThat(arg -> arg != null && arg.equals(1L)));
         verify(preguntasRepository).getPreguntas(eq(1L));
+    }
+
+
+    @Test
+    @DisplayName("argument_matchers_custom_test: tiene que fallar")
+    void argument_matchers_custom_test() {
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST_NETATIVOS);
+        when(preguntasRepository.getPreguntas(anyLong())).thenReturn(Data.PREGUNTAS);
+
+        examenService.findExamenConPreguntas("Mates");
+
+        verify(examenRepository).findAll();
+        verify(preguntasRepository).getPreguntas(argThat(new MyArgsMatchers()));
+    }
+
+    @Test
+    void argument_captor_test() {
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
+
+        examenService.findExamenConPreguntas("Mates");
+
+        //ArgumentCaptor<Long> captor = ArgumentCaptor.forClass(Long.class);
+        verify(preguntasRepository).getPreguntas(captor.capture());
+
+        assertEquals(1L,captor.getValue());
+
+    }
+
+    @Test
+    void do_throw_test() {
+        Examen examen = new Examen(4L, "Tecnología");
+        examen.setPreguntas(Data.PREGUNTAS);
+
+        doThrow(IllegalArgumentException.class).when(preguntasRepository).savePreguntas(anyList());
+
+        assertThrows(IllegalArgumentException.class, () -> examenService.saveExamen(examen));
+    }
+
+
+    @Test
+    void do_answer_test() {
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
+
+        doAnswer(invocation -> {
+            Long id = invocation.getArgument(0);
+            return id == 1L? Data.PREGUNTAS:Collections.emptyList();
+        }).when(preguntasRepository).getPreguntas(anyLong());
+
+        Examen examen = examenService.findExamenConPreguntas("Mates");
+        assertEquals(1L, examen.getId());
+        assertEquals("Mates", examen.getNombre());
+        assertEquals(5, examen.getPreguntas().size());
+        assertTrue(examen.getPreguntas().contains("Sumas"));
+
+        verify(preguntasRepository).getPreguntas(anyLong());
+    }
+
+    @Test
+    void save_examen_with_do_answer_test() {
+        /* Dados los siguientes datos. Precondiciones */
+        Examen newExamen = Data.EXAMEN_ID_NULL;
+        newExamen.setPreguntas(Data.PREGUNTAS);
+
+
+        doAnswer(invocation -> {
+            long examenId = 4L;
+            Examen examen = invocation.getArgument(0);
+            examen.setId(examenId++);
+            return examen;
+        }).when(examenRepository).saveExamen(newExamen);
+
+        /* When: Cuando se ejecute el siguiente método*/
+        Examen examen = examenService.saveExamen(newExamen);
+
+
+        /* Entonces hacemos las validaciones*/
+        assertNotNull(examen);
+        assertEquals(4L,examen.getId());
+
+        verify(examenRepository).saveExamen(any(Examen.class));
+        verify(preguntasRepository).savePreguntas(anyList());
+
+    }
+
+
+    static class MyArgsMatchers implements ArgumentMatcher<Long>{
+
+        @Override
+        public String toString() {
+            return "ERROR: El argumento debe ser positivo";
+        }
+
+        @Override
+        public boolean matches(Long argument) {
+            return argument != null && argument > 0L;
+        }
     }
 }
