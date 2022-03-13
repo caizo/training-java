@@ -238,6 +238,45 @@ class ExamenServiceImplTest {
 
     }
 
+
+    @Test
+    void spy_test() {
+        // spy requiere clases concretas
+        ExamenRepository examenRepository = spy(ExamenRepositoryImpl.class);
+        PreguntasRepository preguntasRepository = spy(PreguntasRepositoryImpl.class);
+        ExamenService examenService = new ExamenServiceImpl(examenRepository,preguntasRepository);
+
+        //when(preguntasRepository.getPreguntas(anyLong())).thenReturn(Data.PREGUNTAS);// real call
+        doReturn(Data.PREGUNTAS).when(preguntasRepository).getPreguntas(anyLong());
+
+        Examen examen = examenService.findExamenConPreguntas("Mates");
+
+        assertEquals(1L,examen.getId());
+        assertTrue(examen.getPreguntas().contains("Sumas"));
+
+        verify(examenRepository).findAll();
+        verify(preguntasRepository).getPreguntas(anyLong());
+
+    }
+
+
+    @Test
+    void order_invocation_test() {
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
+
+        Examen examen = examenService.findExamenConPreguntas("Mates");
+        Examen examen2 = examenService.findExamenConPreguntas("Lengua");
+
+        InOrder inOrder = inOrder(examenRepository,preguntasRepository);
+
+        // si se invierte el orden fallará
+        inOrder.verify(examenRepository).findAll();
+        inOrder.verify(preguntasRepository).getPreguntas(1L);
+        inOrder.verify(examenRepository).findAll();
+        inOrder.verify(preguntasRepository).getPreguntas(2L);
+
+    }
+
     static class MyArgsMatchers implements ArgumentMatcher<Long>{
 
         @Override
