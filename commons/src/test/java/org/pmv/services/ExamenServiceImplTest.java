@@ -60,7 +60,7 @@ class ExamenServiceImplTest {
     void find_examen_con_preguntas_test() {
         // Given
         when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
-        when(preguntasRepository.getPreguntas(1L)).thenReturn(Data.PREGUNTAS_MATES);
+        when(preguntasRepository.getPreguntas(1L)).thenReturn(Data.PREGUNTAS);
         // When
         Examen examenMates = examenService.findExamenConPreguntas("Mates");
         // Then
@@ -74,7 +74,7 @@ class ExamenServiceImplTest {
     void find_no_examen_verify_test() {
         // Given
         when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
-        when(preguntasRepository.getPreguntas(1L)).thenReturn(Data.PREGUNTAS_MATES);
+        when(preguntasRepository.getPreguntas(1L)).thenReturn(Data.PREGUNTAS);
         // When
         Examen examen = examenService.findExamenConPreguntas("Tecnología");
         // Then
@@ -88,7 +88,7 @@ class ExamenServiceImplTest {
     void save_examen_test() {
         /* Dados los siguientes datos. Precondiciones */
         Examen newExamen = Data.EXAMEN;
-        newExamen.setPreguntas(Data.PREGUNTAS_MATES);
+        newExamen.setPreguntas(Data.PREGUNTAS);
 
         when(examenRepository.saveExamen(any(Examen.class))).then(new Answer<Examen>(){
             Long examenId = 4L;
@@ -111,5 +111,30 @@ class ExamenServiceImplTest {
         verify(examenRepository).saveExamen(any(Examen.class));
         verify(preguntasRepository).savePreguntas(anyList());
 
+    }
+
+    @Test
+    void find_preguntas_exception_test() {
+        // GIVEN
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST_NULL);
+        when(preguntasRepository.getPreguntas(isNull())).thenThrow(IllegalArgumentException.class);
+
+        // THEN
+        assertThrows(IllegalArgumentException.class,
+                () -> this.examenService.findExamenConPreguntas("Mates"));
+        verify(examenRepository).findAll();
+        verify(preguntasRepository).getPreguntas(isNull());
+    }
+
+    @Test
+    void argument_matchers_test() {
+        when(examenRepository.findAll()).thenReturn(Data.EXAMEN_LIST);
+        when(preguntasRepository.getPreguntas(anyLong())).thenReturn(Data.PREGUNTAS);
+
+        examenService.findExamenConPreguntas("Mates");
+
+        verify(examenRepository).findAll();
+        verify(preguntasRepository).getPreguntas(argThat(arg -> arg != null && arg.equals(1L)));
+        verify(preguntasRepository).getPreguntas(eq(1L));
     }
 }
